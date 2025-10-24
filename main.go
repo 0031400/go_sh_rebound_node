@@ -31,17 +31,26 @@ func run() {
 		return
 	}
 	defer func() {
-		c.Close()
+		err = c.Close()
 		log.Println("disconnect with the server")
 	}()
 	c.WriteMessage(websocket.BinaryMessage, []byte{0})
+	mt, message, err := c.ReadMessage()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if mt != websocket.TextMessage || !slices.Equal(message, []byte(config.Auth)) {
+		log.Println("verify the server fail")
+		return
+	}
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	c.WriteMessage(websocket.TextMessage, []byte(hostname))
-	mt, message, err := c.ReadMessage()
+	mt, message, err = c.ReadMessage()
 	if err != nil {
 		log.Println(err)
 		return
